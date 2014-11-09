@@ -6,19 +6,23 @@ addpath(genpath('bin'));
 addpath(genpath('data'));
 
 %% Load full measurement 
-%filename = '2D_data.mat'; % load full x-y-t data, and coils
-filename = 'old_test_data.mat'; % load full x-y-t data, and coils
+filename = '2D_data.mat'; % load full x-y-t data, and coils
 disp(['Loading data from: ',filename]);
-if exist('data_2D','var') == 0
-    load(filename);
-end
-data = data_2D;
-filename = '8coil_map.mat'; % load full x-y-t data, and coils
+load(filename);
+full_sample_img = func_data; % func_data = data + mask
+orig_img = data;
+fmrib_img = mask; % fmrib image
+filename = '2D_psens.mat'; % load coil data
+% 2D_psens contains sens, xfm, and psens. psens are the eigensensitivities
+% we use the 8 eigensensitivities 
 disp(['Loading data from: ',filename]);
-if exist('ecmap_3D','var') == 0
-    load(filename);
-end
+load(filename);
 disp('Loaded');
+
+psens = permute(psens,[2 3 1]);
+nc = 8; % use 8 eigencoils
+ecmap = psens(:,:,1:nc);
+[nx,ny,nc] = size(ecmap);
 
 %% Downsampling rate 
 ds_rate = 4; % option to change
@@ -38,9 +42,9 @@ disp(['Downsample pattern: ',ds_pat_str]);
 num_low_freq = 4; % option to change
 disp(['Low frequency full sampling number: ', num2str(num_low_freq)]);
 
-[nx ny nt] = size(data);
-nc = size(ecmap_3D,4);
-coil_data = repmat(data, [1 1 1 nc]).*ecmap_3D; % coil-weighted observations
+[nx ny nt] = size(full_sample_img);
+ecmap_3D = repmat(reshape(ecmap, [nx ny 1 nc]), [1 1 nt 1]);
+coil_data = repmat(full_sample_img, [1 1 1 nc]).*ecmap_3D; % coil-weighted observations
 kt_data = fft(fft(coil_data,[],1),[],2);
 
 mask = downsample_mask(nx,ny,nt,ds_rate,num_low_freq,1);
@@ -59,4 +63,4 @@ tic
 X_FOCUSS = mc_kt_focuss(A,AT,kt_data_ds,mask,num_low_freq,ecmap_3D);
 toc % time focuss
 
-err = norm(data(:) - X_FOCUSS(:))
+err = norm(full_sample_img(:) - X_FOCUSS(:))

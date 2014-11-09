@@ -8,8 +8,6 @@ addpath(genpath('data'));
 
 %% Load full measurement 
 filename = ['2D_data.mat']; % load full x-y-t data, and coils
-%filename = ['old_test_data.mat']; % load full x-y-t data, and coils
-%filename(2) = '8coil_map.mat'; % option to change
 disp(['Loading data from: ',filename]);
 load(filename);
 full_sample_img = func_data; % func_data = data + mask
@@ -47,7 +45,7 @@ kt_data_ds = kt_data.*mask;
 ref = ifft(ifft(kt_data_ds(:,:,1),[],1),[],2);
 figure(5);
 imagesc(abs(ref)); axis off; axis equal; colormap gray; colorbar;
-title('reference');
+title('reference undersampled');
 
 % % function setting
 A = @(x,mask)  fft(fft(x,[],1),[],2).*mask;
@@ -65,4 +63,5 @@ ets = err_plot(X_FOCUSS, full_sample_img);
 figure;
 plot(ets);
 
-save 
+% save for further analysis
+save results.mat ets em err ds_rate ds_pat num_low_freq ref
