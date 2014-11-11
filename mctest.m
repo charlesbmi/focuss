@@ -64,3 +64,12 @@ X_FOCUSS = mc_kt_focuss(A,AT,kt_data_ds,mask,num_low_freq,ecmap_3D);
 toc % time focuss
 
 err = norm(full_sample_img(:) - X_FOCUSS(:))
+em = err_map(X_FOCUSS, full_sample_img);
+imshow(mat2gray(em));
+title('error map')
+ets = err_plot(X_FOCUSS, full_sample_img);
+figure;
+plot(ets);
+
+% save for further analysis
+save mc_results.mat ets em err ds_rate ds_pat num_low_freq ref
