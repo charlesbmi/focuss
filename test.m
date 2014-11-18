@@ -8,7 +8,7 @@ addpath(genpath('data'));
 
 %% Load full measurement 
 filename = ['2D_data.mat']; % load full x-y-t data, and coils
-disp(['Loading data from: ',filename]);
+disp(['Loading data from: ',filename]); % (20,47,:) for F, (25,45,:) for M, (31,44,:) for R, (37,44,:) for I, (39,44,:) for B
 load(filename);
 full_sample_img = func_data; % func_data = data + mask
 orig_img = data;
@@ -16,7 +16,7 @@ fmrib_img = mask; % fmrib image
 disp('Loaded');
 
 %% Downsampling rate 
-ds_rate = 4; % option to change
+ds_rate = 6;
 ds_pat = 1; % downsampling pattern, 0 for uniform random in ky, 1 for gaussian in ky, 2 for random in kx and ky % option to change
 switch ds_pat
 case 0
@@ -57,8 +57,19 @@ toc % time focuss
 
 err = norm(full_sample_img(:) - X_FOCUSS(:))
 em = err_map(X_FOCUSS, full_sample_img);
-imshow(mat2gray(em));
-title('error map')
+imagesc(em);
+axis off; axis equal; colormap gray; colorbar; title('error map')
+
+norm_av = err_map(full_sample_img,0); % todo instead of dividing by norm map, just divide by total norm / 
+figure
+imagesc(em./norm_av);
+axis off; axis equal; colormap gray; colorbar; title('error map normalized by norm of each voxel'); caxis([0 0.05]); % normalize caxis to 5%
+
+figure
+norm_all = norm(full_sample_img(:) / prod(size(em))); % or perhaps mean of mean of norm. to get norm per pixel
+imagesc(em/(norm_all));
+axis off; axis equal; colormap gray; colorbar; title('error map normalized by average norm of entire'); caxis([0 0.05]); % normalize caxis to 5%
+
 ets = err_plot(X_FOCUSS, full_sample_img);
 figure;
 plot(ets);
