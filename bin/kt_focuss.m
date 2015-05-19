@@ -6,6 +6,7 @@ function X_FOCUSS = kt_focuss(A,AT,Y,mask,num_low_freq);
 % Y is old DownSino = Mask.*kt_data
 Low_Y = Y;
 Low_Y(num_low_freq/2+1:end-num_low_freq/2,:,:) = 0; % DC component? TODO test this because  % will look different because of the extra fft
+% todo this is cartesian though
 Mouter = 2;
 Minner = 40;
 factor = 0.5;
