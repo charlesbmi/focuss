@@ -1,46 +1,69 @@
-%function rho_n = focuss_est(v, sample_loc, Wn, L, F, FT)
+%function rho_n = focuss_est(dx, sample_loc, Wn, L, F, FT)
 % Focuss parameters
+clear all
 load('2D_data.mat')
+load('sampling_masks.mat')
 tic
-L=0.1;
-%q = zeros(size(kt));
-F = @(x) ifft(fft(x,[],1),[],3);
-FT = @(x) ifft(fft(x,[],3),[],1);
-rho = fft(func_data,[],3);
-kt = fft(fft(func_data,[],1),[],2);
-W = sqrt(abs(rho));
-im = @(x) imshow(mat2gray(abs(x(:,:,1))));
-q = zeros(size(kt));
-q = W;
 
+%x = zeros(size(kt));
+mask = cart_sampling_mask_8x_4low_freq;
+% todo maybe just fft in 1-D is fine.
+kt = mask.*fft(fft(func_data,[],1),[],2);
+F = @(x) ifft(fft(fft(x,[],1),[],2),[],3);
+FT = @(x) ifft(ifft(fft(x,[],3),[],1),[],2);
+rho = FT(kt);
+%W = sqrt(abs(rho));
+W = sqrt(abs(rho));
+x = W;
+x = zeros(size(W));
+
+im = @(x) imshow(mat2gray(abs(x(:,:,1))));
+L=0.1;
 % descent parameters
 ALPHA = 0.05;
 BETA = 0.1;
-MAXITERS = 30;
+MAXITERS = 50;
 NTTOL = 1e-8;
-GRADTOL = 1e-3;
+GRADTOL = 1e-4;
 
 % gradient method
 vals = []; steps = [];
+errnorm = norm(rho(:))
 for iter = 1:MAXITERS
-	iter
-    % todo check 
-	[val, grad] = focuss_cost(kt, mask, W, L, q, F, FT);
+    % todo check that focuss cost is working
+	[val, grad] = focuss_cost(kt, mask, W, L, x, F, FT);
 	vals = [vals, val];
-	v = -grad;
-	fprime = grad(:)'*v(:);
+	dx = -grad;
+	fprime = grad(:)'*dx(:);
+
+    %%% Value printing
+	iter
 	val
 	gradient_norm = norm(grad(:))
-	if norm(grad(:)) < GRADTOL, break; end;
+    %%% End Value printing
+
+	if norm(grad(:)) < GRADTOL * errnorm, break; end;
 	t = 1;
-	while ( focuss_cost(kt, mask, W, L, q + t*v, F, FT) > ...
+    % todo is focuss cost and alpha t and fprime all real?
+	while ( focuss_cost(kt, mask, W, L, x + t*dx, F, FT) > ...
 		val + ALPHA*t*fprime )
+        % linesearch
 		t = BETA*t;
 	end;
-	q = q+t*v;
-	step_size = norm(t*v(:))
+	x = x+t*dx;
+	step_size = norm(t*dx(:))
 	steps = [steps,t];
 end;
 toc
 
-rho_n = q.*W;
+rho_n = x.*W;
+recon = ifft(rho_n,[],3);
+
+x = 47; y = 20;
+figure;
+hold on;
+plot(abs(squeeze(recon(y,x,:))));
+plot((squeeze(func_data(y,x,:))),'r');
+legend('recon','mask or func_data');
+hold off;
+
