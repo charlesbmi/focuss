@@ -29,12 +29,12 @@ addpath(genpath('bin'));
 addpath(genpath('data'));
 
 %% Load full measurement 
-filename = ['old_test_data.mat']; % load full x-y-t data, and coils
+filename = ['2D_data.mat']; % load full x-y-t data, and coils
 disp(['Loading data from: ',filename]);
 load(filename);
 disp('Loaded');
 
-v = fftc(fftc(data_2D,2),1);
+v = fftc(fftc(func_data,2),1);
 mask = repmat(rand([size(v,1),1,size(v,3)]) < 0.5,[1,size(v,2),1]);
 vu = v.*mask;
 kt_avg = mean(vu,3); % DC component of X-F support

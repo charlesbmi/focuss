@@ -1,22 +1,22 @@
 %function rho_n = focuss_est(v, sample_loc, Wn, L, F, FT)
 % Focuss parameters
+load('2D_data.mat')
 tic
 L=0.1;
 %q = zeros(size(kt));
 F = @(x) ifft(fft(x,[],1),[],3);
 FT = @(x) ifft(fft(x,[],3),[],1);
-F = @(x) ifft(fft(fft(x,[],1),[],2),[],3);
-FT = @(x) ifft(ifft(fft(x,[],3),[],1),[],2);
-nlf = 6;
-rho = fft(ifft(ifft(kt,[],1),[],2),[],3);
+rho = fft(func_data,[],3);
+kt = fft(fft(func_data,[],1),[],2);
 W = sqrt(abs(rho));
 im = @(x) imshow(mat2gray(abs(x(:,:,1))));
+q = zeros(size(kt));
 q = W;
 
 % descent parameters
-ALPHA = 1e-4;
+ALPHA = 0.05;
 BETA = 0.1;
-MAXITERS = 100;
+MAXITERS = 30;
 NTTOL = 1e-8;
 GRADTOL = 1e-3;
 
@@ -24,6 +24,7 @@ GRADTOL = 1e-3;
 vals = []; steps = [];
 for iter = 1:MAXITERS
 	iter
+    % todo check 
 	[val, grad] = focuss_cost(kt, mask, W, L, q, F, FT);
 	vals = [vals, val];
 	v = -grad;
@@ -41,3 +42,5 @@ for iter = 1:MAXITERS
 	steps = [steps,t];
 end;
 toc
+
+rho_n = q.*W;

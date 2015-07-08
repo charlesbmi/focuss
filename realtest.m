@@ -12,7 +12,7 @@ disp('Loaded');
 fftw('planner','patient');
 rng(0);
 
-total_lines = 6000;
+total_lines = 160;
 nc = size(z24,1);
 z = squeeze(z24(1,:,1:total_lines));
 [np nl] = size(z);
@@ -53,9 +53,6 @@ wxy = wi(:,1:nt*nl);
 % second should be time points
 wxy = reshape(wxy, [np nl nt]); % reshape into time lines?
 
-% A = @(img,~) nufft3(ifft(img,[],3), st); % z is kt, A(xf) = kt
-% AT = @(ks,~) fft(nufft3_adj(wxy.*ks,st),[],3); % A(kt) = xf
-
 A = @(img,~) nufft3(img, st, nl); % z is kt, A(xf) = kt
 AT = @(ks,~) nufft3_adj(wxy.*ks,st); % A(kt) = xf
 
@@ -67,31 +64,35 @@ pattern = patterns(:,:,5);
 figure(1)
 imagesc(abs(pattern)); axis off; axis equal; colormap gray; colorbar; title('pattern')
 
-% Reconstruct all coils together
-A = @(img,~) mcnufft3(img, st, nl,sens); % z is kt, A(xf) = kt
-AT = @(ks,~) mcnufft3_adj(wxy.*ks,st,sens); % A(kt) = xf
-%Y = reshape(z24(,:,1:total_lines), [np nl nt]);
-recon = KTFOCUSS(A,AT,Y,Y,ones(size(Y)),factor,lambda,Minner,Mouter);
+% FOCUSS parameters
+Mouter = 2;
+Minner = 40;
+factor = 0.5;
+lambda = 0.1;
 
-% Recontstruct each coil separately before combining
+% Reconstruct each coil separately before combining
 % for coil = nc:-1:1
 % 	tic
-% 	Y = reshape(z24(coil,:,1:total_lines), [np nl nt]);
-% 	Low_Y = Y;
-% 	mask = ones(size(Y));
-% 	Mouter = 2;
-% 	Minner = 40;
-% 	factor = 0.5;
-% 	lambda = 0.1;
-% 	X_FOCUSS(:,:,:,coil) = KTFOCUSS(A,AT,Y,Low_Y,mask,factor,lambda, Minner, Mouter);
+% 	y = reshape(z24(coil,:,1:total_lines), [np nl nt]);
+% 	low_y = y;
+% 	mask = ones(size(y));
+% 	x_focuss(:,:,:,coil) = ktfocuss(a,at,y,low_y,mask,factor,lambda, minner, mouter);
 % 	toc % time focuss
 % end
 
 % figure(2);
-% imagesc(abs(X_FOCUSS(:,:,1,1))); axis off; axis equal; colormap gray; colorbar;
+% imagesc(abs(x_focuss(:,:,1,1))); axis off; axis equal; colormap gray; colorbar;
 % title('reference reconstruction');
 
-% recon = multicoil_recon(X_FOCUSS,sens);
+% recon = multicoil_recon(x_focuss,sens);
+
+% Reconstruct all coils together using multicoil nufft3 (different from above)
+wxy = wi(:,1:nt*nl);
+wxy = repmat(reshape(wxy, [1 np nl nt]), [nc 1 1 1]); % replicate weighting across coils
+A = @(img,~) mcnufft3(img, st, nl,sens); % z is kt, A(xf) = kt
+AT = @(ks,~) mcnufft3_adj(wxy.*ks,st,sens); % A(kt) = xf
+Y = reshape(z24(:,:,1:total_lines), [nc np nl nt]);
+mc_recon = KTFOCUSS(A,AT,Y,Y,ones(size(Y)),factor,lambda,Minner,Mouter);
 
 figure(3);
 imagesc(abs(recon(:,:,1))); axis off; axis equal; colormap gray; colorbar;

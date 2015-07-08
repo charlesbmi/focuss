@@ -20,22 +20,24 @@ function [ rho ] = kt_focuss(F, FT, vu, mask, nlf)
 
 % todo: make these flexible parameters
 disp('k-t FOCUSS start:')
-L = 1e-2;
+L = 1e-1;
 p = 0.5;
-updates = 2;
+updates = 1;
 
 % Optimize FFT
 fftw('planner','patient');
+
+% TODO Use nlf to get sparse initial signal
 
 % Main k-t FOCUSS loop
 rho_initial = FT(vu);
 rho = rho_initial;
 for iter = 1:updates
     disp(sprintf('kt-FOCUSS iteration #: %d',iter))
-    W = abs(rho).^p;
-    % Choose between using Nielsen conj_grad and MATLAB pcg
-    rho = focuss_est(vu,mask,W,L,F,FT);
+    W = (rho).^p;
+    [ rho, vals, steps, step_norms] = focuss_est_new(vu,mask,W,L,F,FT);
 end
-baseline_flux_norm = norm(rho(:)) % TODO norm should be frobenius norm, not norm(x,2)
-diff_eh = abs(rho) - abs(rho_initial);
-diff_test = norm(diff_eh(:))
+
+figure;
+semilogy(vals);
+title('gradient values');
