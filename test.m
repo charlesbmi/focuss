@@ -33,20 +33,18 @@ filenames = {'recon_results/cart_2x_4lowfreq_focuss.mat', 'recon_results/cart_4x
 [nx ny nt] = size(full_sample_img);
 kt_data = fft(fft(full_sample_img,[],1),[],2);
 
-mask = masks{1};
+idx = 3;
+mask = masks{idx};
 kt_data_ds = ifft(kt_data.*mask,[],2);
 
 % % function setting
 F = @(x) ifft(fft(x,[],1),[],3).*mask;
 FT = @(x) ifft(fft(x.*mask,[],3),[],1);
-% F = @(x,mask) fft(x,[],1).*mask;
-% FT = @(x,mask) ifft(x.*mask,[],1);
 tic
-focuss_ft_recon = ifft(kt_focuss_old(F,FT,kt_data_ds,mask,num_low_freq),[],3);
+focuss_ft_recon = ifft(kt_focuss_old(F,FT,kt_data_ds,mask),[],3);
 toc % time focuss
 
 % KT-FOCUSS using rho as KLT support basis.
-% TODO is cost confounded by the kx y basis?
 xtd = ifft(kt_data_ds,[],1);
 % principal components were calculated from low-resolution x–f support obtained using only
 % low-frequency k-space samples.
@@ -58,30 +56,8 @@ a = @(xklt,mask) fft(fft(iklt3(xklt,v),[],1),[],2); % x ky klt
 at = @(kt,mask) klt3(ifft(ifft(kt,[],1),[],2),v);
 
 tic
-%focuss_klt_recon = iklt3(kt_focuss_old(A,AT,fft(fft(focuss_ft_recon,[],1),[],2),mask,num_low_freq),V);
+%focuss_klt_recon = iklt3(kt_focuss_old(A,AT,fft(fft(focuss_ft_recon,[],1),[],2),mask,
 toc
-
-%imagesc(abs(focuss_ft_recon(:,:,2))); axis off; axis equal; colormap gray; colorbar;
-%title('reference reconstruction');
-%figure
-err = norm(full_sample_img(:) - focuss_ft_recon(:))
-em = err_map(focuss_ft_recon, full_sample_img);
-%imagesc(em);
-%axis off; axis equal; colormap gray; colorbar; title('error map')
-
-norm_av = err_map(full_sample_img,0); % todo instead of dividing by norm map, just divide by total norm / 
-%figure
-%imagesc(em./norm_av);
-%axis off; axis equal; colormap gray; colorbar; title('error map normalized by norm of each voxel'); caxis([0 0.05]); % normalize caxis to 5%
-
-%figure
-norm_all = norm(full_sample_img(:) / prod(size(em))); % or perhaps mean of mean of norm. to get norm per pixel
-%imagesc(em/(norm_all));
-%axis off; axis equal; colormap gray; colorbar; title('error map normalized by average norm of entire'); caxis([0 0.05]); % normalize caxis to 5%
-
-%ets = err_plot(focuss_ft_recon, full_sample_img);
-%figure;
-%plot(ets);
 
 figure;
 im([focuss_ft_recon, full_sample_img]);

@@ -1,4 +1,4 @@
-function [ rho ] = kt_focuss(F, FT, vu, mask, nlf)
+function [ rho ] = kt_focuss(F, FT, vu, mask)
 % Attempts to solve vu = F*rho for rho, with a soft sparsity constraint on rho,
 % using the k-t FOCUSS image reconstruction algorithm for kx-t and kx-ky-t data
 % k-t FOCUSS method taken from Jung et al. (2009) and Zong (2014):
@@ -26,8 +26,6 @@ updates = 1;
 
 % Optimize FFT
 fftw('planner','patient');
-
-% TODO Use nlf to get sparse initial signal
 
 % Main k-t FOCUSS loop
 rho_initial = FT(vu);
