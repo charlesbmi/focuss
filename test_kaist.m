@@ -28,8 +28,8 @@ fftw('planner','patient');
 
 kt_data = fft(fft(full_sample_img,[],1),[],2);
 
-masks = {cart_sampling_mask_2x_4low_freq, cart_sampling_mask_4x_4low_freq, cart_sampling_mask_8x_4low_freq};
-filenames = {'recon_results/cart_2x_4lowfreq_kaist.mat', 'recon_results/cart_4x_4lowfreq_kaist.mat', 'recon_results/cart_8x_4lowfreq_kaist.mat'};
+masks = {cart_sampling_mask_2x_4low_freq, cart_sampling_mask_4x_4low_freq, cart_sampling_mask_8x_4low_freq, cart_sampling_mask_12x_4low_freq, cart_sampling_mask_16x_4low_freq};
+filenames = {'recon_results/cart_2x_4lowfreq_kaist.mat', 'recon_results/cart_4x_4lowfreq_kaist.mat', 'recon_results/cart_8x_4lowfreq_kaist.mat', 'recon_results/cart_12x_4lowfreq_kaist.mat', 'recon_results/cart_16x_4lowfreq_kaist.mat'};
 for idx = 1:length(masks)
 
     mask = masks{idx};
