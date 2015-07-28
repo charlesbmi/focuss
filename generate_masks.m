@@ -42,9 +42,9 @@ save(filename, '-struct', 'S');
 clearvars S
 % radial sampling patterns
 N_readout_points = 128;
-for nl = [2,4,8,16]
+for nl = [2,4,8,16,32]
     disp(['Radial sampling with lines / time frame: ', num2str(nl)]);
-    [k, wi] = gen_radial(0, N_readout_points, nl, nt);
+    [k, wi] = gen_radial(0, N_readout_points, nl*nt, 1);
     var_name = sprintf('radial_sampling_mask_%dreadout_lines', nl)
     S.(sprintf('%s_k', var_name)) = k;
     S.(sprintf('%s_wi', var_name)) = wi;
