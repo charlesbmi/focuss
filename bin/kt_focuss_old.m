@@ -32,8 +32,8 @@ rho_initial = FT(vu);
 rho = rho_initial;
 for iter = 1:updates
     disp(sprintf('kt-FOCUSS iteration #: %d',iter))
-    W = (rho).^p;
-    [ rho, vals, steps, step_norms] = focuss_est_new(vu,mask,W,L,F,FT);
+    W = (abs(rho)).^p;
+    [ rho, vals, steps, step_norms ] = focuss_est_new(vu,mask,W,L,F,FT);
 end
 
 figure;
