@@ -2,7 +2,7 @@
 % Focuss parameters
 %clear all
 load('2D_data.mat')
-load('sampling_masks.mat')
+load('cart_sampling_masks.mat')
 tic
 
 mask = cart_sampling_mask_8x_4low_freq;

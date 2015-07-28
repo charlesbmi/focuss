@@ -15,39 +15,40 @@ function [ rho_n, vals, steps, step_norms] = focuss_est_new(kt, mask, W, L, F, F
 %
 % Charles Guan (charles.guan@stanford.edu)
 
-tic
-
 % descent parameters
-ALPHA = 0.01;
-BETA = 0.5;
-MAXITERS = 50;
+ALPHA = 0.1; %0.05;
+BETA = 0.5; %0.1;
+MAXITERS = 250;
 NTTOL = 1e-8;
-GRADTOL = 1e-3;
+GRADTOL = 1e-4;
 %q = W; % last estimate chosen as initial guess. For some reason this leads to stagnant, slow-slope convergence.
 q = zeros(size(W));
 vals = []; steps = []; step_norms = [];t=1;
+dq = 0; prev_grad_norm = Inf;
+rho = FT(kt);
+errnorm = norm(rho(:));
 
-% conjugate gradient method
-% Hessian is F*W + L*I
 for iter = 1:MAXITERS
-	iter
-	[val, grad] = focuss_cost(kt, mask, W, L, q, F, FT);
-	vals = [vals, val];
-	v = -grad; % Using conjugate gradient
-	%v = -grad./hessian;% Using Newton's method
-	fprime = grad(:)'*v(:);
-	val
-	if norm(grad(:)) < GRADTOL, break; end;
-	t = min(1,t/BETA^2); % Start with lower t to help faster convergence
-	% t = 1;
-	while ( focuss_cost(kt, mask, W, L, q + t*v, F, FT) > ...
-		val + ALPHA*t*fprime )
-		t = BETA*t;
-	end;
-	q = q+t*v;
-	steps = [steps,t];
-	step_norms = [step_norms, norm(t*v(:))];
-end;
-toc
+    [val, grad] = focuss_cost(kt, mask, W, L, q, F, FT);
+    vals = [vals, val];
+    dq = -grad + dq*(norm(grad(:))/prev_grad_norm)^2;
+    fprime = grad(:)'*dq(:);
 
-rho_n = W.*q;
+    if norm(grad(:)) < GRADTOL * errnorm, break; end;
+    %t = 1; % speed up by "remembering" previous t. heuristic
+    t = min(1, t/BETA^2);
+    % todo is focuss cost and alpha t and fprime all real?
+    while ( focuss_cost(kt, mask, W, L, q + t*dq, F, FT) > ...
+            val + ALPHA*t*fprime )
+    % linesearch
+            t = BETA*t;
+    end;
+    q = q+t*dq;
+    step_size = norm(t*dq(:));
+    steps = [steps,t];
+    disp(sprintf('Iter: %03i, Step: %f, Grad: %f, Err: %f',iter,step_size,norm(grad(:))/errnorm,sqrt(focuss_cost(kt, mask, W, L, q, F, FT))/errnorm)); % That's cost not error
+end;
+
+rho_n = q.*W;
+recon = ifft(rho_n,[],3);
+%recon = iklt3(rho_n, V);
