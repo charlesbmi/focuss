@@ -39,7 +39,7 @@ filename = 'data/cart_sampling_masks.mat';
 display(['masks to file: ', filename])
 save(filename, '-struct', 'S');
 
-clearvars S;
+clearvars S
 % radial sampling patterns
 N_readout_points = 128;
 for nl = [2,4,8,16,32]
