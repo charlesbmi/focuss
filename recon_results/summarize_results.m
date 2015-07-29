@@ -13,12 +13,12 @@ for idx = 1:length(filenames)
 
   filename = filenames{idx};
   [path, name, ext] = fileparts(filename);
-  disp(path);
   if (strcmp(ext, '.mat'))
+    vars = whos('-file', filename);
+    if ~ismember('recon', {vars.name}) % todo, and not recon_z24.mat
+        continue
+    end
     display(name)
-    fileobj = matfile(filename);
-    filedata = whos(fileobj);
-    filedata.name;
     load(filename,'recon');
 
     display(filename);
@@ -28,11 +28,12 @@ for idx = 1:length(filenames)
     figure(idx);
     hold on;
     plot(abs(squeeze(recon(y,x,:))));
-    plot((squeeze(full_sample_img(y,x,:))),'r');
+    plot((squeeze(TRUTH(y,x,:))),'r');
     legend('recon','truth');
-    title(strcat('flashing fmrib 2D_data recon: ', filename));
+    title(strcat('flashing fmrib 2D_data recon: ', filename), 'interpreter', 'none');
     hold off;
-    plot_filename = strcat(fullfile(path, name),'.pdf');
+    drawnow;
+    plot_filename = strcat(fullfile(path, 'result_plots', name),'.pdf');
     saveas(idx, plot_filename, 'pdf');
   end
 end
