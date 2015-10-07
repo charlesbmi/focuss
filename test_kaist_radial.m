@@ -25,7 +25,8 @@ nls = [2, 4, 8, 16, 32];
 %   see Buehrer et al., MRM 2007)
 %   ============================================================================
 
-for idx = 3:length(filenames)
+%for idx = 3:length(filenames)
+for idx = [3,4]
   filename = filenames{idx};
   k = ks{idx};
   wi = wis{idx};
@@ -79,7 +80,7 @@ pattern = patterns(:,:,5);
 % imagesc(abs(pattern)); axis off; axis equal; colormap gray; colorbar; title('pattern')
 
 % FOCUSS parameters
-Mouter = 2;
+Mouter = 3;
 Minner = 40;
 factor = 0.5;
 lambda = 0.1;
@@ -93,18 +94,18 @@ lambda = 0.1;
 
     err = norm(func_data(:) - X_FOCUSS(:))
 
-    figure;
-    im([X_FOCUSS, func_data]);
-    title('left: FFT recon; right: fully sampled original')
+    %figure;
+    %im([X_FOCUSS, func_data]);
+    %title('left: FFT recon; right: fully sampled original')
 
-    fmrib_recon = X_FOCUSS;
-    figure;
-    hold on;
-    plot(abs(squeeze(fmrib_recon(20,47,:))));
-    plot((squeeze(full_sample_img(20,47,:))),'r');
-    legend('recon','mask or func_data');
-    hold off;
-    drawnow;
+    recon = X_FOCUSS;
+    %figure;
+    %hold on;
+    %plot(abs(squeeze(fmrib_recon(20,47,:))));
+    %plot((squeeze(func_data(20,47,:))),'r');
+    %legend('recon','mask or func_data');
+    %hold off;
+    %drawnow;
 
-    save(filenames{idx}, 'fmrib_recon');
+    save(filenames{idx}, 'recon');
 end
