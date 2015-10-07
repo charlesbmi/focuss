@@ -1,6 +1,6 @@
 %   Example 2D multi-coil radial undersampled k-t FOCUSS reconstruction
 %
-%   Charles Guanw
+%   Charles Guan
 %
 
 %   ============================================================================
@@ -12,7 +12,7 @@ im = @(x) imshow(mat2gray(abs(x(:,:,1))));
 
 load('sens_data');
 load('2D_data.mat','func_data');
-func_data_512 = func_data;
+func_data = func_data;
 load('radial_sampling_masks.mat');
 
 filenames = {'recon_results/radial_2lines_kaist.mat', 'recon_results/radial_4lines_kaist.mat', 'recon_results/radial_8lines_kaist.mat', 'recon_results/radial_16lines_kaist.mat', 'recon_results/radial_32lines_kaist.mat'};
@@ -34,7 +34,7 @@ for idx = [3,4]
 
 % Generate data.
 dims    =   [64, 64, 1, 512];
-func_data_512 = func_data_512(1:dims(1),1:dims(2),1:dims(4));
+func_data = func_data(1:dims(1),1:dims(2),1:dims(4));
 ncoils  =   1;
 psens   =   coil_compression_xfm(1:ncoils, :)*reshape(sens2D,32,[]);
 psens   =   reshape(psens, [ncoils, dims(1:2)]);
@@ -55,7 +55,7 @@ for t = nt:-1:1 % reverse index to pre-allocate st
     J = [6 6];	% interpolation neighborhood
     K = N*2;	% two-times oversampling
     om = [kx(:) ky(:)];	% 'frequencies' are locations here!
-    
+
     st(t) = nufft_init(om, N, J, K, N/2, 'minmax:kb'); % use 'table' to save memory
 
 end
@@ -64,9 +64,7 @@ disp('Pre-allocated')
 
 np = size(k,1);
 wxy = wi(:,1:nt*nl);
-% first should be points per time point. 
-% second should be time points
-wxy = reshape(wxy, [np nl nt]); % reshape into time lines?
+wxy = reshape(wxy, [np nl nt]);
 
 A = @(img,~) nufft3(img, st, nl); % z is kt, A(xf) = kt
 AT = @(ks,~) nufft3_adj(wxy.*ks,st); % A(kt) = xf
@@ -99,13 +97,13 @@ lambda = 0.1;
     %title('left: FFT recon; right: fully sampled original')
 
     recon = X_FOCUSS;
-    %figure;
-    %hold on;
-    %plot(abs(squeeze(fmrib_recon(20,47,:))));
-    %plot((squeeze(func_data(20,47,:))),'r');
-    %legend('recon','mask or func_data');
-    %hold off;
-    %drawnow;
+    figure;
+    hold on;
+    plot(abs(squeeze(recon(20,47,:))));
+    plot((squeeze(func_data(20,47,:))),'r');
+    legend('recon','func_data');
+    hold off;
+    drawnow;
 
     save(filenames{idx}, 'recon');
 end
