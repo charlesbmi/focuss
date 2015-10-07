@@ -13,7 +13,7 @@ filename = ['2D_data.mat']; % load full x-y-t data, and coils
 disp(['Loading data from: ',filename]); % (20,47,:) for F, (25,45,:) for M, (31,44,:) for R, (37,44,:) for I, (39,44,:) for B
 load(filename);
 
-maskname = ['sampling_masks.mat'];
+maskname = ['cart_sampling_masks.mat'];
 disp(['Loading masks from: ', maskname]);
 load(maskname);
 
@@ -32,6 +32,7 @@ masks = {cart_sampling_mask_2x_4low_freq, cart_sampling_mask_4x_4low_freq, cart_
 filenames = {'recon_results/cart_2x_4lowfreq_kaist.mat', 'recon_results/cart_4x_4lowfreq_kaist.mat', 'recon_results/cart_8x_4lowfreq_kaist.mat', 'recon_results/cart_12x_4lowfreq_kaist.mat', 'recon_results/cart_16x_4lowfreq_kaist.mat'};
 for idx = 1:length(masks)
 
+    display(filenames{idx});
     mask = masks{idx};
 
     kt_data_ds = kt_data.*mask;
@@ -48,16 +49,13 @@ for idx = 1:length(masks)
     norm_av = err_map(full_sample_img,0); % todo instead of dividing by norm map, just divide by total norm / 
     norm_all = norm(full_sample_img(:) / prod(size(em))); % or perhaps mean of mean of norm. to get norm per pixel
 
-    figure;
-    im([X_FOCUSS, full_sample_img]);
-    title('left: FFT recon; right: fully sampled original')
-
     fmrib_recon = X_FOCUSS;
     figure;
     hold on;
     plot(abs(squeeze(fmrib_recon(20,47,:))));
     plot((squeeze(full_sample_img(20,47,:))),'r');
     legend('recon','mask or func_data');
+    drawnow;
     hold off;
 
     save(filenames{idx}, 'fmrib_recon');
