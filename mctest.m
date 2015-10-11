@@ -60,7 +60,7 @@ A = @(x,mask)  fft(fft(x,[],1),[],2).*mask;
 AT = @(x,mask) ifft(ifft(x.*mask,[],1),[],2);
 
 tic
-X_FOCUSS = mc_kt_focuss(A,AT,kt_data_ds,mask,num_low_freq,ecmap_3D);
+[X_FOCUSS,recon] = mc_kt_focuss(A,AT,kt_data_ds,mask,num_low_freq,ecmap_3D);
 toc % time focuss
 
 err = norm(full_sample_img(:) - X_FOCUSS(:))
