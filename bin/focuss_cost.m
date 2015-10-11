@@ -27,6 +27,5 @@ function [ cost, grad ] = focuss_cost(v, mask, W, L, q, A, AT)
 err_term = (v-A(W.*q)).*mask;
 cost = norm(err_term(:),2)^2 + L*norm(q(:),2)^2;
 if nargout > 1
-	grad = -W.*AT(err_term) + L*q;
+  grad = -W.*AT(err_term) + L*q;
 end
-%grad = grad(:);

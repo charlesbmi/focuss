@@ -34,7 +34,7 @@ klt_filenames = {'recon_results/cart_2x_4lowfreq_kltfocuss.mat', 'recon_results/
 [nx ny nt] = size(full_sample_img);
 kt_data = fft(fft(full_sample_img,[],1),[],2);
 
-for idx = 1:1%length(filenames)
+for idx = 1:length(filenames)
     display(filenames{idx});
     mask = masks{idx};
     kt_data_ds = ifft(kt_data.*mask,[],2);

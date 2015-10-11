@@ -1,10 +1,10 @@
-function rho_n = focuss_est(v, sample_loc, Wn, L, F, FT)
+function rho_n = focuss_est(kt, mask, Wn, L, F, FT)
 % Computes the nth FOCUSS estimate for k-t FOCUSS algorithm by minimizing
 % the cost function using Nielsen's conj_grad or MATLAB function lsqnonlin, as
 % described in "Improved k-t BLAST and k-t SENSE using FOCUSS (Jung et al., 2007)
 % Inputs
-%       v - raw undersampled k-t space data of object
-%       sample_loc - sampling locations of v, 1 where sampled, 0 where
+%       kt - raw undersampled k-t space data of object
+%       mask - sampling locations of kt, 1 where sampled, 0 where
 %           missing data
 %       Wn - updated weighting vector
 %       L - Lagrangian parameter, which weights cost function
@@ -15,29 +15,57 @@ function rho_n = focuss_est(v, sample_loc, Wn, L, F, FT)
 %
 % Charles Guan (charles.guan@stanford.edu)
 
-% Using Nielsen's conj_grad
-% cost_fun = @(q,~)focuss_cost(v,size(v),sample_loc,Wn,L,q,F,FT);
-% [qn, infor] = conj_grad(cost_fun,[],Wn(:),[2,2,1,1e-10,1e-10,1000,1e-10,1e-10,100]);
-% switch infor(6)
-%     case 1
-%         disp(sprintf('conj_grad converged at evaluation %d by small gradient ||g||_inf = %d',infor(5),infor(2)));
-%     case 2
-%         disp(sprintf('conj_grad converged at evaluation %d by small x-step ||dx||_2 = %d',infor(5),infor(3)));
-%     case 3
-%         disp(sprintf('conj_grad failed to converge: maximum evaluation of %d reached. gradient residual: %d',infor(5),infor(2))); 
-% end
-% disp(sprintf('Final function evaluation: %g',infor(1)));
-% disp(sprintf('Final gradient evaluation: %g',infor(2)));
-% disp(sprintf('Final x-step: %g',infor(3)));
-% qn = reshape(qn, size(v));
+% Initialize variables
+rho = FT(kt);
+W = sqrt(abs(rho));
+x = zeros(size(W));
 
-% Using MATLAB's optimization toolbox lsqnonlin
-options = optimset('lsqnonlin');
-options = optimset(options,'Jacobian','on');
-options = optimset(options,'DerivativeCheck','on');
-option = optimset(options,'FunValCheck','on');
-options = optimset(options,'TolFun',1e-3,'TolX',1e-3);
-lsq_cost_fun = @(q)focuss_lsq_cost(v,sample_loc,Wn,L,q,F,FT);
-qn = lsqnonlin(lsq_cost_fun,Wn,[],[],options);
+kt = mask.*fft(fft(func_data,[],1),[],2);
+F = @(rho) ifft(fft(fft(rho,[],1),[],2),[],3);
+FT = @(kt) ifft(ifft(fft(kt,[],3),[],1),[],2);
 
-rho_n = Wn.*qn;
+%[U,S,V] = svd(reshape(recon, [64*64 512]));
+%F = @(rho) iklt3(fft(fft(rho,[],1),[],2),V);
+%FT = @(kt) ifft(ifft(klt3(kt,V),[],1),[],2);
+
+rho = FT(kt);
+W = sqrt(abs(rho));
+x = zeros(size(W));
+
+% descent parameters
+ALPHA = 0.05;
+BETA = 0.1;
+MAXITERS = 100;
+NTTOL = 1e-8;
+GRADTOL = 1e-4;
+
+% gradient method
+vals = []; steps = [];
+errnorm = norm(rho(:))
+t = 1;
+dx = 0;
+prev_grad_norm = Inf;
+for iter = 1:MAXITERS
+	[val, grad] = focuss_cost(kt, mask, W, L, x, F, FT);
+	vals = [vals, val];
+	dx = -grad + dx*(norm(grad(:))/prev_grad_norm)^2;
+	fprime = grad(:)'*dx(:);
+
+        disp(sprintf('Iter: %03i, Grad: %f, Cost Funct: %f',iter,norm(g(:))/errnorm,value/errnorm));
+
+	%t = 1; % speed up by "remembering" previous t. heuristic
+        t = min(1, t/BETA^2);
+        % todo is focuss cost and alpha t and fprime all real?
+	while ( focuss_cost(kt, mask, W, L, x + t*dx, F, FT) > ...
+		val + ALPHA*t*fprime )
+        % linesearch
+		t = BETA*t;
+	end;
+	x = x+t*dx;
+	step_size = norm(t*dx(:))
+	steps = [steps,t];
+
+	if norm(t*dx(:)) < GRADTOL * norm(x(:)), break; end;
+end;
+
+rho_n = x.*W;

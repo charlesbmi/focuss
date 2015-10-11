@@ -1,4 +1,4 @@
-function X_FOCUSS = mc_kt_focuss(A,AT,Y,mask,num_low_freq,map);
+function [X_FOCUSS, recon] = mc_kt_focuss(A,AT,Y,mask,num_low_freq,map);
 % multicoil k-t FOCUSS
 % map - coil sensitivity map
 % sparse solution for A*X_FOCUSS = Y
