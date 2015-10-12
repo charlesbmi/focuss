@@ -1,6 +1,6 @@
-function [ rho_n, vals, steps, step_norms] = focuss_est_new(kt, mask, W, L, F, FT)
+function [ rho_n, costs, steps, step_norms] = focuss_est_new(kt, mask, W, L, F, FT)
 % Computes the nth FOCUSS estimate for k-t FOCUSS algorithm by minimizing
-% Cost(q) = ||kt − F*W*q||^2_2 + L*||q||^2_2, as
+% Cost(q) = ||kt - F*W*q||^2_2 + L*||q||^2_2, as
 % described in "Improved k-t BLAST and k-t SENSE using FOCUSS (Jung et al., 2007)
 % Inputs
 %       kt - raw undersampled k-t space data of object
@@ -18,7 +18,7 @@ function [ rho_n, vals, steps, step_norms] = focuss_est_new(kt, mask, W, L, F, F
 % descent parameters
 ALPHA = 0.1; %0.05;
 BETA = 0.5; %0.1;
-MAXITERS = 250;
+MAXITERS = 50;
 NTTOL = 1e-8;
 GRADTOL = 1e-4;
 %q = W; % last estimate chosen as initial guess. For some reason this leads to stagnant, slow-slope convergence.
@@ -29,8 +29,8 @@ rho = FT(kt);
 errnorm = norm(rho(:));
 
 for iter = 1:MAXITERS
-    [val, grad] = focuss_cost(kt, mask, W, L, q, F, FT);
-    vals = [vals, val];
+    [cost, grad] = focuss_cost(kt, mask, W, L, q, F, FT);
+    costs = [costs, cost];
     dq = -grad + dq*(norm(grad(:))/prev_grad_norm)^2;
     fprime = grad(:)'*dq(:);
 
@@ -46,7 +46,7 @@ for iter = 1:MAXITERS
     q = q+t*dq;
     step_size = norm(t*dq(:));
     steps = [steps,t];
-    disp(sprintf('Iter: %03i, Step: %f, Grad: %f, Err: %f',iter,step_size,norm(grad(:))/errnorm,sqrt(focuss_cost(kt, mask, W, L, q, F, FT))/errnorm)); % That's cost not error
+    disp(sprintf('Iter: %03i, Step: %f, Grad: %f, Cost: %f',iter,step_size,norm(grad(:))/errnorm,sqrt(focuss_cost(kt, mask, W, L, q, F, FT))/errnorm));
 end;
 
 rho_n = q.*W;
